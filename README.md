@@ -1,5 +1,7 @@
 # \<gz-grant\>
 
+[documentation](https://osrf.github.io/gz-grant/components/gz-grant)
+
 A webcomponent to share a Cloudsim resource
 
 ## Install the Polymer-CLI
