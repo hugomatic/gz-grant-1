@@ -2,7 +2,9 @@
 
 # \<gz-grant\>
 
-[documentation](https://osrf.github.io/gz-grant/components/gz-grant)
+documentation: [https://osrf.github.io/gz-grant/components/gz-grant](https://osrf.github.io/gz-grant/components/gz-grant)
+
+demo: [https://osrf.github.io/gz-grant/components/gz-grant](https://osrf.github.io/gz-grant/components/gz-grant/demo)
 
 A webcomponent to share a Cloudsim resource
 
