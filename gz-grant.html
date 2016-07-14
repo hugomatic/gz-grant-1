@@ -63,19 +63,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           Granter token<input id=token value="{{token::input}}"></input>
         </div>
         <div>
-          Grantee username:<input id=grantee value="{{grantee::input}}">
-                           </input>
-        </div>
-        <div>
-          Resource:<input id=resource value="{{resource::input}}"></input>
-        </div>
-        <div>
-          <input
-            type="checkbox"
-            id=readOnly
-            checked="{{readOnly::change}}">
-          </input>Read only
-        </div>
+
       </div>
       <div id="gui">
         <div><h1>{{title}}</h1></div>
@@ -83,6 +71,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <div id="feedback" style="display:none">
           <span id="feedback_text"/>
         </div>
+
+        <div>
+          Grantee username:<input id=grantee value="{{grantee::input}}">
+                           </input>
+        </div>
+
+        <div>
+          Resource:<input id=resource value="{{resource::input}}"></input>
+        </div>
+
+        <input
+            type="checkbox"
+            id=readOnly
+            checked="{{readOnly::change}}">
+          </input>Read only
+        </div>
+
         <div>
           <button on-tap="tapGrant"  id="buttonGrant">Grant</button>
           <button on-tap="tapRevoke"  id="buttonRevoke">Revoke</button>
