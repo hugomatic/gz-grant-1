@@ -66,73 +66,67 @@
     </iron-ajax>
     <div id="whole">
 
-      <div id="config">
+      <div id="config" hidden$="[[!config]]">
         <div><h4>{{caption}}</h4></div>
         <div>
-          Server URL:<input id=url value="{{url::input}}"></input>
+         <input id=url value="{{url::input}}" placeholder="server URL"></input>
         </div>
         <div>
-          Granter token<input id=token value="{{token::input}}"></input>
+         <input id=token value="{{token::input}}" placeholder="Granter token"></input>
         </div>
-
       </div>
-      <div id="gui">
-        <div><h1>{{title}}</h1></div>
 
-        <div id="feedback" style="display:none">
-          <span id="feedback_text"/>
+      <div id="gui" hidden$="[[!gui]]">
+        <div>
+          <input
+            id=grantee
+            value="{{grantee::input}}"
+            placeholder="Grantee username"
+          >
+          </input>
         </div>
 
         <div>
-          Grantee username:<input id=grantee value="{{grantee::input}}">
-                           </input>
-        </div>
-
-        <div>
-          Resource:<input id=resource value="{{resource::input}}"></input>
+          <input
+            id=resource
+            value="{{resource::input}}"
+            placeholder="resource name"
+          ></input>
         </div>
 
         <input
             type="checkbox"
             id="read_only"
-            checked="{{read_only::change}}">
-          </input>Read only
+            checked="{{readOnly::change}}">
+        </input>Read only
 
         <div>
           <button on-tap="grant"  id="buttonGrant">Grant</button>
           <button on-tap="revoke"  id="buttonRevoke">Revoke</button>
         </div>
       </div>
+
     </div>
   </template>
 
   <script>
     (function() {
-      'use strict';
+      'use strict'
 
       Polymer({
         is: 'gz-grant',
 
-        // Triggered when the "gui" property is changed
-        _guiChanged: function(newValue, oldValue) {
-          this.$.gui.style.display = newValue ? '' : 'none'
-        },
-        // Triggered when the "config" property is changed
-        _configChanged: function(newValue, oldValue) {
-          this.$.config.style.display = newValue ? '' : 'none'
-        },
-        // Triggered when the "border" property is changed
-        _borderChanged: function(newValue, oldValue) {
-          this.$.whole.style.border = newValue ? 'solid 1px' : 'none'
-        },
         attached: function() {
           console.log('gz-grant widget attached!')
         },
         grant: function() {
           this.$.ajaxgrant.url = this.url + '/permissions'
-          const data = { username: this.grantee,
-                         id: this.resource,
-                         read_only: this.read_only }
+          // const data = { username: this.grantee,
+          //               id: this.resource,
+          //               read_only: this.read_only }
+          const data = { grantee: this.grantee,
+                         resource: this.resource,
+                         readOnly: this.readOnly }
           this.$.ajaxgrant.headers.authorization = this.token
           this.$.ajaxgrant.body = data;
           this.$.ajaxgrant.generateRequest()
@@ -140,9 +134,12 @@
 
         revoke: function() {
           this.$.ajaxrevoke.url = this.url + '/permissions'
-          const data = { username: this.grantee,
-                         id: this.resource,
-                         read_only: this.read_only }
+          // const data = { username: this.grantee,
+          //               id: this.resource,
+          //               read_only: this.read_only }
+          const data = { grantee: this.grantee,
+                         resource: this.resource,
+                         readOnly: this.readOnly }
           this.$.ajaxrevoke.headers.authorization = this.token
           this.$.ajaxrevoke.body = data;
           this.$.ajaxrevoke.generateRequest()
@@ -150,7 +147,7 @@
 
         get: function() {
           this.$.ajaxget.url = this.url + '/permissions'
-          const data = { id: this.resource }
+          const data = { resource: this.resource }
           this.$.ajaxget.headers.authorization = this.token
           this.$.ajaxget.body = data;
           this.$.ajaxget.generateRequest()
@@ -186,6 +183,16 @@
         },
 
         properties: {
+          gui: {
+            type: Boolean,
+            value: true,
+            notify: true
+          },
+         config: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
           title: {
 	          type: String,
             value: 'Permission granting tool (gz-grant)',
@@ -207,38 +214,21 @@
             value: 'gzserver',
 	          notify: true
 	        },
-          read_only: {
+          readOnly: {
             type: Boolean,
             value: true,
 	          notify: true
 	        },
           token: {
             type: String,
-            value: 'toto@osrf.org',
+            value: 'gz-grant token has not been set',
 	          notify: true
 	        },
           grantee: {
             type: String,
             value: 'Bob',
 	          notify: true
-          },
-
-          gui: {
-            type: Boolean,
-            value: false,
-            observer: '_guiChanged'
-          },
-          config: {
-            type: Boolean,
-            value: false,
-            observer: '_configChanged'
-          },
-          border: {
-            type: Boolean,
-            value: false,
-            observer: '_borderChanged'
-          },
-
+          }
         }
       });
     })();
