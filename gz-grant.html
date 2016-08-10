@@ -147,7 +147,7 @@
 
         get: function() {
           this.$.ajaxget.url = this.url + '/permissions'
-          const data = { id: this.resource }
+          const data = { resource: this.resource }
           this.$.ajaxget.headers.authorization = this.token
           this.$.ajaxget.body = data;
           this.$.ajaxget.generateRequest()
