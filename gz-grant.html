@@ -178,7 +178,7 @@
 
         getResponse: function(req) {
           let res = this.$.ajaxget.lastResponse
-          console.log(res)
+          this.fire('permissions', res)
         },
 
         getError: function(err) {
