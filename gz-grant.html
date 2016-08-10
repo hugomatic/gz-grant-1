@@ -55,6 +55,15 @@
       content-type="application/json"
       debounce-duration="300">
     </iron-ajax>
+    <iron-ajax
+      id="ajaxget"
+      method="GET"
+      handle-as="json"
+      on-response="getResponse"
+      on-error="getError"
+      content-type="application/json"
+      debounce-duration="300">
+    </iron-ajax>
     <div id="whole">
 
       <div id="config">
@@ -139,6 +148,14 @@
           this.$.ajaxrevoke.generateRequest()
         },
 
+        get: function() {
+          this.$.ajaxget.url = this.url + '/permissions'
+          const data = { id: this.resource }
+          this.$.ajaxget.headers.authorization = this.token
+          this.$.ajaxget.body = data;
+          this.$.ajaxget.generateRequest()
+        },
+
         grantResponse: function(req) {
           let res = this.$.ajaxgrant.lastResponse
           this.fire('granted', {'success': res.success})
@@ -157,6 +174,15 @@
         revokeError: function(err) {
           console.log(err)
           this.fire('revoked', {'success': false})
+        },
+
+        getResponse: function(req) {
+          let res = this.$.ajaxget.lastResponse
+          console.log(res)
+        },
+
+        getError: function(err) {
+          console.log(err)
         },
 
         properties: {
