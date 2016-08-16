@@ -96,8 +96,8 @@
 
         <input
             type="checkbox"
-            id="read_only"
-            checked="{{readOnly::change}}">
+            id="readonly"
+            checked="{{readonly::change}}">
         </input>Read only
 
         <div>
@@ -121,12 +121,9 @@
         },
         grant: function() {
           this.$.ajaxgrant.url = this.url + '/permissions'
-          // const data = { username: this.grantee,
-          //               id: this.resource,
-          //               read_only: this.read_only }
           const data = { grantee: this.grantee,
                          resource: this.resource,
-                         readOnly: this.readOnly }
+                         readOnly: this.readonly }
           this.$.ajaxgrant.headers.authorization = this.token
           this.$.ajaxgrant.body = data;
           this.$.ajaxgrant.generateRequest()
@@ -134,20 +131,16 @@
 
         revoke: function() {
           this.$.ajaxrevoke.url = this.url + '/permissions'
-          // const data = { username: this.grantee,
-          //               id: this.resource,
-          //               read_only: this.read_only }
           const data = { grantee: this.grantee,
                          resource: this.resource,
-                         readOnly: this.readOnly }
+                         readOnly: this.readonly }
           this.$.ajaxrevoke.headers.authorization = this.token
           this.$.ajaxrevoke.body = data;
           this.$.ajaxrevoke.generateRequest()
         },
 
         get: function() {
-          this.$.ajaxget.url = this.url + '/permissions'
-          const data = { resource: this.resource }
+          this.$.ajaxget.url = this.url + '/permissions/' + this.resource
           this.$.ajaxget.headers.authorization = this.token
           this.$.ajaxget.body = data;
           this.$.ajaxget.generateRequest()
@@ -155,7 +148,8 @@
 
         grantResponse: function(req) {
           let res = this.$.ajaxgrant.lastResponse
-          this.fire('granted', {'success': res.success})
+          if (res)
+            this.fire('granted', {'success': res.success})
         },
 
         grantError: function(err) {
@@ -165,7 +159,15 @@
 
         revokeResponse: function(req) {
           let res = this.$.ajaxrevoke.lastResponse
-          this.fire('revoked', {'success': res.success})
+          if (res.error)
+          {
+            console.log("Failed to revoke: " + res.error.msg)
+            this.fire('revoked', {'success': false})
+          }
+          else
+          {
+            this.fire('revoked', {'success': res.success})
+          }
         },
 
         revokeError: function(err) {
@@ -214,7 +216,7 @@
             value: 'gzserver',
 	          notify: true
 	        },
-          readOnly: {
+          readonly: {
             type: Boolean,
             value: true,
 	          notify: true
