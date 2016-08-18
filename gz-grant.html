@@ -4,72 +4,65 @@
 <dom-module id='gz-grant'>
   <template>
     <style>
+
       :host {
         display: block;
       }
-
       span {
         @apply(--paper-font-body1);
       }
 
-      #gui {
-        max-width:25em
-      }
-
-      #gui > div > input{
-        float:right;
-      }
-
-      #gui > div{
-        padding-top:0.5em;
-      }
-
-      #config {
-        max-width:20em
-      }
-
-      #config > div{
-        padding-top:0.5em;
-      }
-
-      #config > div > input{
-        float:right;
-      }
-
     </style>
+
     <iron-ajax
       id="ajaxgrant"
       method="POST"
+      url=[[url]]/permissions
       handle-as="json"
-      on-response="grantResponse"
-      on-error="grantError"
+      on-response="_grantResponse"
+      on-error="_grantError"
       content-type="application/json"
       debounce-duration="300">
     </iron-ajax>
     <iron-ajax
       id="ajaxrevoke"
       method="DELETE"
+      url=[[url]]/permissions
       handle-as="json"
-      on-response="revokeResponse"
-      on-error="revokeError"
+      on-response="_revokeResponse"
+      on-error="_revokeError"
       content-type="application/json"
-      debounce-duration="300">
-    </iron-ajax>
+      debounce-duration="300"
+    ></iron-ajax>
     <iron-ajax
       id="ajaxget"
       method="GET"
+      url=[[url]]/permissions/[[resource]]
       handle-as="json"
-      on-response="getResponse"
-      on-error="getError"
+      on-response="_getResponse"
+      on-error="_getError"
       content-type="application/json"
-      debounce-duration="300">
-    </iron-ajax>
+      debounce-duration="300"
+    ></iron-ajax>
+    <iron-ajax
+      id="ajaxgetall"
+      method="GET"
+      url=[[url]]/permissions
+      handle-as="json"
+      on-response="_getAllResponse"
+      on-error="_getAllError"
+      content-type="application/json"
+      debounce-duration="300"
+    ></iron-ajax>
+
     <div id="whole">
 
       <div id="config" hidden$="[[!config]]">
         <div><h4>{{caption}}</h4></div>
         <div>
          <input id=url value="{{url::input}}" placeholder="server URL"></input>
+         <br>
+         <a target="_blank" href="[[url]]">[[url]]</a>
         </div>
         <div>
          <input id=token value="{{token::input}}" placeholder="Granter token"></input>
@@ -77,6 +70,20 @@
       </div>
 
       <div id="gui" hidden$="[[!gui]]">
+        <div>
+          <button on-tap="getall" id="buttongetall">Get All resources</button>
+        <div>
+
+        <div>
+          <input
+            id=resource
+            value="{{resource::input}}"
+            placeholder="resource name"
+          ></input>
+        </div>
+        <div>
+          <button on-tap="get" id="buttonGet">Get "[[resource]]" permissions</button>
+        <div>
         <div>
           <input
             id=grantee
@@ -86,24 +93,32 @@
           </input>
         </div>
 
-        <div>
-          <input
-            id=resource
-            value="{{resource::input}}"
-            placeholder="resource name"
-          ></input>
-        </div>
-
         <input
             type="checkbox"
-            id="read_only"
-            checked="{{readOnly::change}}">
+            id="readonly"
+            checked="{{readonly::change}}">
         </input>Read only
 
         <div>
-          <button on-tap="grant"  id="buttonGrant">Grant</button>
-          <button on-tap="revoke"  id="buttonRevoke">Revoke</button>
+          <button on-tap="tapGrant" id="buttonGrant">Grant "[[resource]]"</button>
+          <button on-tap="tapRevoke" id="buttonRevoke">Revoke "[[resource]]"</button>
         </div>
+
+        <h2>Resource</h2>
+        name: "[[resource]]"
+        <br>requester: "[[requester]]"
+        <br>data: <pre>[[_j(data)]]</pre>
+        <template is="dom-repeat" items="{{permissions}}">
+          <br> [[index]]. [[item.username]] readonly "[[item.permissions.readOnly]]"
+        </template>
+
+        <h2>Resources list</h2>
+          requester: "[[requester]]"
+          <template is="dom-repeat" items="{{resources}}">
+            <br> [[index]]. [[item.name]]
+            <pre> [[_j(item)]] </pre>
+
+          </template>
       </div>
 
     </div>
@@ -119,118 +134,189 @@
         attached: function() {
           console.log('gz-grant widget attached!')
         },
-        grant: function() {
-          this.$.ajaxgrant.url = this.url + '/permissions'
-          // const data = { username: this.grantee,
-          //               id: this.resource,
-          //               read_only: this.read_only }
+
+        tapGrant: function() {
           const data = { grantee: this.grantee,
                          resource: this.resource,
-                         readOnly: this.readOnly }
+                         readOnly: this.readonly }
           this.$.ajaxgrant.headers.authorization = this.token
           this.$.ajaxgrant.body = data;
           this.$.ajaxgrant.generateRequest()
         },
 
-        revoke: function() {
-          this.$.ajaxrevoke.url = this.url + '/permissions'
-          // const data = { username: this.grantee,
-          //               id: this.resource,
-          //               read_only: this.read_only }
+        grant: function(data) {
+          this.grantee = data.grantee
+          this.resource = data.resource
+          this.readonly = data.readonly
+          this.tapGrant()
+        },
+
+        tapRevoke: function() {
           const data = { grantee: this.grantee,
                          resource: this.resource,
-                         readOnly: this.readOnly }
+                         readOnly: this.readonly }
           this.$.ajaxrevoke.headers.authorization = this.token
           this.$.ajaxrevoke.body = data;
           this.$.ajaxrevoke.generateRequest()
         },
 
+        revoke: function(data) {
+          this.grantee = data.grantee
+          this.resource = data.resource
+          this.readonly = data.readonly
+          this.tapRevoke()
+        },
+
         get: function() {
-          this.$.ajaxget.url = this.url + '/permissions'
-          const data = { resource: this.resource }
           this.$.ajaxget.headers.authorization = this.token
-          this.$.ajaxget.body = data;
           this.$.ajaxget.generateRequest()
         },
 
-        grantResponse: function(req) {
-          let res = this.$.ajaxgrant.lastResponse
-          this.fire('granted', {'success': res.success})
+        getall: function() {
+          this.$.ajaxgetall.headers.authorization = this.token
+          this.$.ajaxgetall.generateRequest()
         },
 
-        grantError: function(err) {
+        _j: function(item) {
+          return JSON.stringify(item, null, 2)
+        },
+
+        _grantResponse: function(req) {
+          let res = this.$.ajaxgrant.lastResponse
+          if (res)
+            this.fire('granted', {'success': res.success})
+        },
+
+        _grantError: function(err) {
           console.log(err)
           this.fire('granted', {'success': false})
         },
 
-        revokeResponse: function(req) {
+        _revokeResponse: function(req) {
           let res = this.$.ajaxrevoke.lastResponse
-          this.fire('revoked', {'success': res.success})
+          if (res.error)
+          {
+            console.log("Failed to revoke: " + res.error.msg)
+            this.fire('revoked', {'success': false})
+          }
+          else
+          {
+            this.fire('revoked', {'success': res.success})
+          }
         },
 
-        revokeError: function(err) {
+        _revokeError: function(err) {
           console.log(err)
           this.fire('revoked', {'success': false})
         },
 
-        getResponse: function(req) {
-          let res = this.$.ajaxget.lastResponse
-          this.fire('permissions', res)
+        _getResponse: function(req) {
+          const resp = this.$.ajaxget.lastResponse
+          const success = resp.success
+          this.requester = resp.requester
+          this.permissions = resp.result.permissions
+          this.data = resp.result.data
         },
 
-        getError: function(err) {
+        _getError: function(err) {
+          console.log('gz-grant::_getError')
+          console.log(err)
+        },
+
+        _getAllResponse: function(req) {
+          console.log('gz-grant::_getAllResponse')
+          console.log(req)
+          const resp = this.$.ajaxgetall.lastResponse
+          this.resources = resp.result
+        },
+
+        _getAllError: function(err) {
+          console.log('gz-grant::_getAllError')
           console.log(err)
         },
 
         properties: {
+
+          /// Show or hide the functionality UI
           gui: {
             type: Boolean,
             value: false,
             notify: true
           },
+
+          /// Show or hide the configuration UI
           config: {
             type: Boolean,
             value: false,
             notify: true
           },
-          title: {
-	          type: String,
-            value: 'Permission granting tool (gz-grant)',
-	          notify: true
-	        },
-          caption: {
-	          type: String,
-            value: 'Grant / revoke permission to read / write to a resouce.\
- The grantee must have at least the target permission.',
-	          notify: true
-	        },
+
+          /// The url of the server that manages the resources
           url: {
 	          type: String,
-            value: 'https://localhost:8080',
+            value: '',
 	          notify: true
 	        },
+
+          /// the name of the resource
           resource: {
             type: String,
             value: 'gzserver',
 	          notify: true
 	        },
-          readOnly: {
+
+          readonly: {
             type: Boolean,
             value: true,
 	          notify: true
 	        },
+
+          // the token that represents the requester user
           token: {
             type: String,
             value: 'gz-grant token has not been set',
 	          notify: true
 	        },
+
+          /// The user to share or unshare a resource with
           grantee: {
             type: String,
             value: 'Bob',
 	          notify: true
+          },
+
+          /// The data for the resource
+          data: {
+            type: Object,
+            value: {},
+            notify: true,
+            readonly: true
+          },
+
+          /// The permissions for that resource, indexed by user name
+          permissions: {
+            type: Array,
+            value: [],
+            notify: true,
+            readonly: true
+          },
+
+          /// The name of the requester (this )
+          requester: {
+            type: String,
+            notify: true,
+            value: '',
+            readonly: true
+          },
+
+          resources: {
+            type: Array,
+            value: [],
+            notify: true,
+            readonly: true
           }
         }
-      });
-    })();
+      })
+    })()
   </script>
 </dom-module>
