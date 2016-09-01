@@ -114,7 +114,7 @@
 
         <h2>Resources list</h2>
           requester: "[[requester]]"
-          <template is="dom-repeat" items="{{resources}}">
+          <template is="dom-repeat" items="[[resources]]">
             <br> [[index]]. [[item.name]]
             <pre> [[_j(item)]] </pre>
 
@@ -228,11 +228,15 @@
           console.log(req)
           const resp = this.$.ajaxgetall.lastResponse
           this.resources = resp.result
+
+          this.fire('resourcesupdated', this.resources)
         },
 
         _getAllError: function(err) {
-          console.log('gz-grant::_getAllError')
-          console.log(err)
+          // No need to log this all the time, not necessarily an error, just
+          // means user has no permissions
+          // Message often is at: err.detail.error.message
+          // console.error(err)
         },
 
         properties: {
