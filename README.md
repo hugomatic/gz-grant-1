@@ -1,5 +1,7 @@
 [ ![Codeship Status for osrf/gz-grant](https://codeship.com/projects/2fadd1c0-1ae6-0134-6f11-0e8ad2af7d49/status?branch=master)](https://codeship.com/projects/159497)
 
+[![GitHub version](https://badge.fury.io/gh/osrf%2Fgz-grant.svg)](https://badge.fury.io/gh/osrf%2Fgz-grant)
+
 # \<gz-grant\>
 
 documentation: [https://osrf.github.io/gz-grant/components/gz-grant](https://osrf.github.io/gz-grant/components/gz-grant)
