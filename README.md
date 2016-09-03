@@ -2,6 +2,8 @@
 
 [![GitHub version](https://badge.fury.io/gh/osrf%2Fgz-grant.svg)](https://badge.fury.io/gh/osrf%2Fgz-grant)
 
+[![Dependency Status](https://www.versioneye.com/user/projects/57ca37c2939fc6004abe4af9/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/57ca37c2939fc6004abe4af9)
+
 # \<gz-grant\>
 
 documentation: [https://osrf.github.io/gz-grant/components/gz-grant](https://osrf.github.io/gz-grant/components/gz-grant)
