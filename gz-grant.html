@@ -254,6 +254,8 @@
                 }
               }
               else {
+                // if there was a response, look for an object
+                // with a message / error / msg attribute
                 try {
                   const x = ajax.lastError.response
                   const json = typeof (x) === "object"? x: JSON.parse(x)
@@ -265,7 +267,9 @@
                     msg += ": " + json.message
                 }
                 catch(err) {
-                  msg += ajax.lastError.response
+                  // the error is not formatted as expected
+                  // add the entire response
+                  msg += ": " + ajax.lastError.response
                 }
               }
             }
