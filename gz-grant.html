@@ -256,20 +256,20 @@
               else {
                 // if there was a response, look for an object
                 // with a message / error / msg attribute
+                const res = ajax.lastError.response
                 try {
-                  const x = ajax.lastError.response
-                  const json = typeof (x) === "object"? x: JSON.parse(x)
+                  const json = typeof (res) === "object"? x: JSON.parse(res)
                   if(json.error)
                     msg += ": " + json.error
                   if(json.msg)
-                    msg += ": " + json.error
+                    msg += ": " + json.msg
                   if(json.message)
                     msg += ": " + json.message
                 }
                 catch(err) {
                   // the error is not formatted as expected
                   // add the entire response
-                  msg += ": " + ajax.lastError.response
+                  msg += ": " + res
                 }
               }
             }
