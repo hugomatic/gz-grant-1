@@ -255,7 +255,6 @@
               }
               else {
                 try {
-                  console.log(ajax.lastError.response)
                   const x = ajax.lastError.response
                   const json = typeof (x) === "object"? x: JSON.parse(x)
                   if(json.error)
@@ -271,7 +270,6 @@
               }
             }
           }
-
           console.error(msg)
           this.fire('error', msg,  {bubbles: this.bubbles})
         },
