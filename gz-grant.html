@@ -188,7 +188,7 @@
         },
 
         _grantError: function(err) {
-          console.log(err)
+          this._errorHelper(err, 'error granting permission')
           this.fire('granted', {'success': false})
         },
 
@@ -206,7 +206,7 @@
         },
 
         _revokeError: function(err) {
-          console.log(err)
+          this._errorHelper(err, 'error revoking permission')
           this.fire('revoked', {'success': false})
         },
 
@@ -219,8 +219,7 @@
         },
 
         _getError: function(err) {
-          console.log('gz-grant::_getError')
-          console.log(err)
+          this._errorHelper(err, 'error getting permission')
         },
 
         _getAllResponse: function(req) {
@@ -233,13 +232,60 @@
         },
 
         _getAllError: function(err) {
-          // No need to log this all the time, not necessarily an error, just
-          // means user has no permissions
-          // Message often is at: err.detail.error.message
-          // console.error(err)
+          this._errorHelper(err, 'error getting all permissions')
+        },
+
+        _errorHelper: function(err, msg) {
+          let ajax = err.target
+          if(!ajax) {
+            console.error("ajax expected")
+          }
+          else{
+            if(!ajax.lastError) {
+              console.log("no lastError!")
+            }
+            else {
+              if(!ajax.lastError.response) {
+                if (err.detail.error.message) {
+                  msg += ": " + err.detail.error.message
+                }
+                else {
+                  msg += ": no response"
+                }
+              }
+              else {
+                // if there was a response, look for an object
+                // with a message / error / msg attribute
+                const res = ajax.lastError.response
+                try {
+                  const json = typeof (res) === "object"? x: JSON.parse(res)
+                  if(json.error)
+                    msg += ": " + json.error
+                  if(json.msg)
+                    msg += ": " + json.msg
+                  if(json.message)
+                    msg += ": " + json.message
+                }
+                catch(err) {
+                  // the error is not formatted as expected
+                  // add the entire response
+                  msg += ": " + res
+                }
+              }
+            }
+          }
+          console.error(msg)
+          this.fire('error', msg,  {bubbles: this.bubbles})
         },
 
         properties: {
+
+          /// When false, prevents events to bubble up the DOM to the
+          /// window object
+          bubbles: {
+            type: Boolean,
+            value: true
+          },
 
           /// Show or hide the functionality UI
           gui: {
@@ -269,6 +315,7 @@
 	          notify: true
 	        },
 
+          /// when true, limits the access to the resource
           readonly: {
             type: Boolean,
             value: true,
@@ -312,7 +359,7 @@
             value: '',
             readonly: true
           },
-
+          /// Contains the list of all resources
           resources: {
             type: Array,
             value: [],
