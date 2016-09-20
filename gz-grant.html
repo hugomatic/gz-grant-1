@@ -199,9 +199,13 @@
             console.log("Failed to revoke: " + res.error.msg)
             this.fire('revoked', {'success': false})
           }
-          else
+          else if (res)
           {
             this.fire('revoked', {'success': res.success})
+          }
+          else
+          {
+            console.error(req);
           }
         },
 
@@ -212,10 +216,20 @@
 
         _getResponse: function(req) {
           const resp = this.$.ajaxget.lastResponse
+          if (!resp)
+            return;
+
           const success = resp.success
+          if (!success) {
+            console.error("Failed to get permissions for resource:");
+            console.error(resp);
+          }
+
           this.requester = resp.requester
           this.permissions = resp.result.permissions
           this.data = resp.result.data
+
+          this.fire('got', resp);
         },
 
         _getError: function(err) {
@@ -245,6 +259,8 @@
           }
           else if (!ajax.lastError.response) {
             if (err.detail.error.message) {
+              // We're ending up here on 500 and get the message that it is 500.
+              // Instead, we should get the specific msg sent by cloudsim-grant.
               msg += ": " + err.detail.error.message
             }
             else {
@@ -280,7 +296,7 @@
           /// window object
           bubbles: {
             type: Boolean,
-            value: true
+            value: false
           },
 
           /// Show or hide the functionality UI
