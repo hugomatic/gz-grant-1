@@ -71,7 +71,7 @@
 
       <div id="gui" hidden$="[[!gui]]">
         <div>
-          <button on-tap="getall" id="buttongetall">Get All resources</button>
+          <button on-tap="getall" id="buttongetall">Get All permissions</button>
         <div>
 
         <div>
@@ -114,7 +114,7 @@
 
         <h2>Resources list</h2>
           requester: "[[requester]]"
-          <template is="dom-repeat" items="[[resources]]">
+          <template is="dom-repeat" items="[[permissions]]">
             <br> [[index]]. [[item.name]]
             <pre> [[_j(item)]] </pre>
 
@@ -188,7 +188,7 @@
         },
 
         _grantError: function(err) {
-          this._errorHelper(err, 'error granting permission')
+          this._errorHelper(err, 'Error granting permission')
           this.fire('granted', {'success': false})
         },
 
@@ -199,9 +199,13 @@
             console.log("Failed to revoke: " + res.error.msg)
             this.fire('revoked', {'success': false})
           }
-          else
+          else if (res)
           {
             this.fire('revoked', {'success': res.success})
+          }
+          else
+          {
+            console.error(req);
           }
         },
 
@@ -212,66 +216,74 @@
 
         _getResponse: function(req) {
           const resp = this.$.ajaxget.lastResponse
+          if (!resp)
+            return;
+
           const success = resp.success
+          if (!success) {
+            console.error("Failed to get permissions for resource:");
+            console.error(resp);
+          }
+
           this.requester = resp.requester
           this.permissions = resp.result.permissions
           this.data = resp.result.data
+
+          this.fire('got', resp);
         },
 
         _getError: function(err) {
-          this._errorHelper(err, 'error getting permission')
+          this._errorHelper(err, 'Error getting permission')
         },
 
         _getAllResponse: function(req) {
-          console.log('gz-grant::_getAllResponse')
-          console.log(req)
           const resp = this.$.ajaxgetall.lastResponse
-          this.resources = resp.result
+          if (!resp)
+            return;
 
-          this.fire('resourcesupdated', this.resources)
+          this.permissions = resp.result
+          this.fire('permissionsupdated', this.permissions)
         },
 
         _getAllError: function(err) {
-          this._errorHelper(err, 'error getting all permissions')
+          this._errorHelper(err, 'Error getting all permissions')
         },
 
         _errorHelper: function(err, msg) {
           let ajax = err.target
-          if(!ajax) {
+          if (!ajax) {
             console.error("ajax expected")
           }
-          else{
-            if(!ajax.lastError) {
-              console.log("no lastError!")
+          else if (!ajax.lastError) {
+            console.log("no lastError!")
+          }
+          else if (!ajax.lastError.response) {
+            if (err.detail.error.message) {
+              // We're ending up here on 500 and get the message that it is 500.
+              // Instead, we should get the specific msg sent by cloudsim-grant.
+              msg += ": " + err.detail.error.message
             }
             else {
-              if(!ajax.lastError.response) {
-                if (err.detail.error.message) {
-                  msg += ": " + err.detail.error.message
-                }
-                else {
-                  msg += ": no response"
-                }
-              }
-              else {
-                // if there was a response, look for an object
-                // with a message / error / msg attribute
-                const res = ajax.lastError.response
-                try {
-                  const json = typeof (res) === "object"? x: JSON.parse(res)
-                  if(json.error)
-                    msg += ": " + json.error
-                  if(json.msg)
-                    msg += ": " + json.msg
-                  if(json.message)
-                    msg += ": " + json.message
-                }
-                catch(err) {
-                  // the error is not formatted as expected
-                  // add the entire response
-                  msg += ": " + res
-                }
-              }
+              msg += ": no response"
+            }
+          }
+          else {
+            // if there was a response, look for an object
+            // with a message / error / msg attribute
+            const res = ajax.lastError.response
+            try {
+              const json = typeof (res) === "object" ? res : JSON.parse(res)
+              if(json.error)
+                msg += ": " + json.error
+              if(json.msg)
+                msg += ": " + json.msg
+              if(json.message)
+                msg += ": " + json.message
+            }
+            catch(err) {
+              // the error is not formatted as expected
+              // add the entire response
+              msg += ": " + res
             }
           }
           console.error(msg)
@@ -284,7 +296,7 @@
           /// window object
           bubbles: {
             type: Boolean,
-            value: true
+            value: false
           },
 
           /// Show or hide the functionality UI
@@ -301,7 +313,7 @@
             notify: true
           },
 
-          /// The url of the server that manages the resources
+          /// The url of the server that manages the permissions
           url: {
 	          type: String,
             value: '',
@@ -359,8 +371,8 @@
             value: '',
             readonly: true
           },
-          /// Contains the list of all resources
-          resources: {
+          /// Contains the list of all permissions
+          permissions: {
             type: Array,
             value: [],
             notify: true,
