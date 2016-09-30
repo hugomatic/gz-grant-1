@@ -1,0 +1,26 @@
+{
+  "name": "gz-grant",
+  "description": "A webcomponent to share a Cloudsim resource",
+  "main": "gz-grant.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.4.0",
+    "iron-ajax": "polymerelements/iron-ajax#^1.4.0"
+  },
+  "devDependencies": {
+    "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
+    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^1.0.0",
+    "web-component-tester": "^4.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.0"
+  },
+  "homepage": "https://github.com/osrf/gz-grant",
+  "_release": "a1159c7de7",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "a1159c7de77643dcd2aefdf6c0d12696ffa51928"
+  },
+  "_source": "git://github.com/osrf/gz-grant.git",
+  "_target": "master",
+  "_originalSource": "osrf/gz-grant",
+  "_direct": true
+}

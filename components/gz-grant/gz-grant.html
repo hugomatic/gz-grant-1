@@ -1,0 +1,385 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+
+<dom-module id='gz-grant'>
+  <template>
+    <style>
+
+      :host {
+        display: block;
+      }
+      span {
+        @apply(--paper-font-body1);
+      }
+
+    </style>
+
+    <iron-ajax
+      id="ajaxgrant"
+      method="POST"
+      url=[[url]]/permissions
+      handle-as="json"
+      on-response="_grantResponse"
+      on-error="_grantError"
+      content-type="application/json"
+      debounce-duration="300">
+    </iron-ajax>
+    <iron-ajax
+      id="ajaxrevoke"
+      method="DELETE"
+      url=[[url]]/permissions
+      handle-as="json"
+      on-response="_revokeResponse"
+      on-error="_revokeError"
+      content-type="application/json"
+      debounce-duration="300"
+    ></iron-ajax>
+    <iron-ajax
+      id="ajaxget"
+      method="GET"
+      url=[[url]]/permissions/[[resource]]
+      handle-as="json"
+      on-response="_getResponse"
+      on-error="_getError"
+      content-type="application/json"
+      debounce-duration="300"
+    ></iron-ajax>
+    <iron-ajax
+      id="ajaxgetall"
+      method="GET"
+      url=[[url]]/permissions
+      handle-as="json"
+      on-response="_getAllResponse"
+      on-error="_getAllError"
+      content-type="application/json"
+      debounce-duration="300"
+    ></iron-ajax>
+
+    <div id="whole">
+
+      <div id="config" hidden$="[[!config]]">
+        <div><h4>{{caption}}</h4></div>
+        <div>
+         <input id=url value="{{url::input}}" placeholder="server URL"></input>
+         <br>
+         <a target="_blank" href="[[url]]">[[url]]</a>
+        </div>
+        <div>
+         <input id=token value="{{token::input}}" placeholder="Granter token"></input>
+        </div>
+      </div>
+
+      <div id="gui" hidden$="[[!gui]]">
+        <div>
+          <button on-tap="getall" id="buttongetall">Get All permissions</button>
+        <div>
+
+        <div>
+          <input
+            id=resource
+            value="{{resource::input}}"
+            placeholder="resource name"
+          ></input>
+        </div>
+        <div>
+          <button on-tap="get" id="buttonGet">Get "[[resource]]" permissions</button>
+        <div>
+        <div>
+          <input
+            id=grantee
+            value="{{grantee::input}}"
+            placeholder="Grantee username"
+          >
+          </input>
+        </div>
+
+        <input
+            type="checkbox"
+            id="readonly"
+            checked="{{readonly::change}}">
+        </input>Read only
+
+        <div>
+          <button on-tap="tapGrant" id="buttonGrant">Grant "[[resource]]"</button>
+          <button on-tap="tapRevoke" id="buttonRevoke">Revoke "[[resource]]"</button>
+        </div>
+
+        <h2>Resource</h2>
+        name: "[[resource]]"
+        <br>requester: "[[requester]]"
+        <br>data: <pre>[[_j(data)]]</pre>
+        <template is="dom-repeat" items="{{permissions}}">
+          <br> [[index]]. [[item.username]] readonly "[[item.permissions.readOnly]]"
+        </template>
+
+        <h2>Resources list</h2>
+          requester: "[[requester]]"
+          <template is="dom-repeat" items="[[permissions]]">
+            <br> [[index]]. [[item.name]]
+            <pre> [[_j(item)]] </pre>
+
+          </template>
+      </div>
+
+    </div>
+  </template>
+
+  <script>
+    (function() {
+      'use strict'
+
+      Polymer({
+        is: 'gz-grant',
+
+        attached: function() {
+          console.log('gz-grant widget attached!')
+        },
+
+        tapGrant: function() {
+          const data = { grantee: this.grantee,
+                         resource: this.resource,
+                         readOnly: this.readonly }
+          this.$.ajaxgrant.headers.authorization = this.token
+          this.$.ajaxgrant.body = data;
+          this.$.ajaxgrant.generateRequest()
+        },
+
+        grant: function(data) {
+          this.grantee = data.grantee
+          this.resource = data.resource
+          this.readonly = data.readonly
+          this.tapGrant()
+        },
+
+        tapRevoke: function() {
+          const data = { grantee: this.grantee,
+                         resource: this.resource,
+                         readOnly: this.readonly }
+          this.$.ajaxrevoke.headers.authorization = this.token
+          this.$.ajaxrevoke.body = data;
+          this.$.ajaxrevoke.generateRequest()
+        },
+
+        revoke: function(data) {
+          this.grantee = data.grantee
+          this.resource = data.resource
+          this.readonly = data.readonly
+          this.tapRevoke()
+        },
+
+        get: function() {
+          this.$.ajaxget.headers.authorization = this.token
+          this.$.ajaxget.generateRequest()
+        },
+
+        getall: function() {
+          this.$.ajaxgetall.headers.authorization = this.token
+          this.$.ajaxgetall.generateRequest()
+        },
+
+        _j: function(item) {
+          return JSON.stringify(item, null, 2)
+        },
+
+        _grantResponse: function(req) {
+          let res = this.$.ajaxgrant.lastResponse
+          if (res)
+            this.fire('granted', {'success': res.success})
+        },
+
+        _grantError: function(err) {
+          this._errorHelper(err, 'Error granting permission')
+          this.fire('granted', {'success': false})
+        },
+
+        _revokeResponse: function(req) {
+          let res = this.$.ajaxrevoke.lastResponse
+          if (res.error)
+          {
+            console.log("Failed to revoke: " + res.error.msg)
+            this.fire('revoked', {'success': false})
+          }
+          else if (res)
+          {
+            this.fire('revoked', {'success': res.success})
+          }
+          else
+          {
+            console.error(req);
+          }
+        },
+
+        _revokeError: function(err) {
+          this._errorHelper(err, 'error revoking permission')
+          this.fire('revoked', {'success': false})
+        },
+
+        _getResponse: function(req) {
+          const resp = this.$.ajaxget.lastResponse
+          if (!resp)
+            return;
+
+          const success = resp.success
+          if (!success) {
+            console.error("Failed to get permissions for resource:");
+            console.error(resp);
+          }
+
+          this.requester = resp.requester
+          this.permissions = resp.result.permissions
+          this.data = resp.result.data
+
+          this.fire('got', resp);
+        },
+
+        _getError: function(err) {
+          this._errorHelper(err, 'Error getting permission')
+        },
+
+        _getAllResponse: function(req) {
+          const resp = this.$.ajaxgetall.lastResponse
+          if (!resp)
+            return;
+
+          this.permissions = resp.result
+          this.fire('permissionsupdated', this.permissions)
+        },
+
+        _getAllError: function(err) {
+          this._errorHelper(err, 'Error getting all permissions')
+        },
+
+        _errorHelper: function(err, msg) {
+          let ajax = err.target
+          if (!ajax) {
+            console.error("ajax expected")
+          }
+          else if (!ajax.lastError) {
+            console.log("no lastError!")
+          }
+          else if (!ajax.lastError.response) {
+            if (err.detail.error.message) {
+              // We're ending up here on 500 and get the message that it is 500.
+              // Instead, we should get the specific msg sent by cloudsim-grant.
+              msg += ": " + err.detail.error.message
+            }
+            else {
+              msg += ": no response"
+            }
+          }
+          else {
+            // if there was a response, look for an object
+            // with a message / error / msg attribute
+            const res = ajax.lastError.response
+            try {
+              const json = typeof (res) === "object" ? res : JSON.parse(res)
+              if(json.error)
+                msg += ": " + json.error
+              if(json.msg)
+                msg += ": " + json.msg
+              if(json.message)
+                msg += ": " + json.message
+            }
+            catch(err) {
+              // the error is not formatted as expected
+              // add the entire response
+              msg += ": " + res
+            }
+          }
+          console.error(msg)
+          this.fire('error', msg,  {bubbles: this.bubbles})
+        },
+
+        properties: {
+
+          /// When false, prevents events to bubble up the DOM to the
+          /// window object
+          bubbles: {
+            type: Boolean,
+            value: false
+          },
+
+          /// Show or hide the functionality UI
+          gui: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+
+          /// Show or hide the configuration UI
+          config: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+
+          /// The url of the server that manages the permissions
+          url: {
+	          type: String,
+            value: '',
+	          notify: true
+	        },
+
+          /// the name of the resource
+          resource: {
+            type: String,
+            value: 'gzserver',
+	          notify: true
+	        },
+
+          /// when true, limits the access to the resource
+          readonly: {
+            type: Boolean,
+            value: true,
+	          notify: true
+	        },
+
+          // the token that represents the requester user
+          token: {
+            type: String,
+            value: 'gz-grant token has not been set',
+	          notify: true
+	        },
+
+          /// The user to share or unshare a resource with
+          grantee: {
+            type: String,
+            value: 'Bob',
+	          notify: true
+          },
+
+          /// The data for the resource
+          data: {
+            type: Object,
+            value: {},
+            notify: true,
+            readonly: true
+          },
+
+          /// The permissions for that resource, indexed by user name
+          permissions: {
+            type: Array,
+            value: [],
+            notify: true,
+            readonly: true
+          },
+
+          /// The name of the requester (this )
+          requester: {
+            type: String,
+            notify: true,
+            value: '',
+            readonly: true
+          },
+          /// Contains the list of all permissions
+          permissions: {
+            type: Array,
+            value: [],
+            notify: true,
+            readonly: true
+          }
+        }
+      })
+    })()
+  </script>
+</dom-module>
