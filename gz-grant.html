@@ -205,7 +205,7 @@
           }
           else
           {
-            console.error(req);
+            console.log(req);
           }
         },
 
@@ -221,8 +221,8 @@
 
           const success = resp.success
           if (!success) {
-            console.error("Failed to get permissions for resource:");
-            console.error(resp);
+            console.log("Failed to get permissions for resource:");
+            console.log(resp);
           }
 
           this.requester = resp.requester
@@ -252,7 +252,7 @@
         _errorHelper: function(err, msg) {
           let ajax = err.target
           if (!ajax) {
-            console.error("ajax expected")
+            console.log("ajax expected")
           }
           else if (!ajax.lastError) {
             console.log("no lastError!")
@@ -286,7 +286,7 @@
               msg += ": " + res
             }
           }
-          console.error(msg)
+          console.log(msg)
           this.fire('error', msg,  {bubbles: this.bubbles})
         },
 
